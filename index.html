@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chronos — Precision Millisecond Stopwatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dark-mode">
+  <!-- Ambient Background Glow -->
+  <div class="ambient-backdrop" aria-hidden="true">
+    <div class="glow glow-amber"></div>
+    <div class="glow glow-indigo"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <div class="studio-shell">
+    <!-- Top Header -->
+    <header class="studio-header glass-card">
+      <div class="brand">
+        <div class="brand-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="13" r="8" />
+            <path d="M12 9v4l2.5 2.5" />
+            <path d="M5 3 2 6" /><path d="m22 6-3-3" /><path d="M10 2h4" />
+          </svg>
+        </div>
+        <div>
+          <span class="brand-name">Chronos</span>
+          <span class="brand-tag">Precision Millisecond Chronograph</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <button id="soundToggleBtn" type="button" class="icon-pill-btn" aria-pressed="true" title="Toggle tactile audio clicks">
+          <svg id="soundOnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+          </svg>
+          <svg id="soundOffIcon" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <line x1="23" y1="9" x2="17" y2="15" />
+            <line x1="17" y1="9" x2="23" y2="15" />
+          </svg>
+          <span id="soundLabel">Audio On</span>
+        </button>
+
+        <button id="themeToggleBtn" type="button" class="icon-pill-btn" aria-label="Switch color theme">
+          <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
+          </svg>
+          <span id="themeLabel">Light Mode</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Two-Column Chronometer Workspace -->
+    <main class="workspace-grid">
+      <!-- Left Column: Chronograph Dial & Interactive Controls -->
+      <section class="chronograph-panel glass-card" aria-label="Stopwatch Timer">
+        <div class="panel-top-bar">
+          <span class="panel-eyebrow">High-Frequency Timer</span>
+          <div id="statusBadge" class="status-badge ready">
+            <span class="status-dot"></span>
+            <span id="statusText">Standby</span>
+          </div>
+        </div>
+
+        <!-- Circular Progress Dial -->
+        <div class="dial-wrapper">
+          <svg class="dial-svg" viewBox="0 0 280 280" aria-hidden="true">
+            <defs>
+              <linearGradient id="dialGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f59e0b" />
+                <stop offset="50%" stop-color="#f97316" />
+                <stop offset="100%" stop-color="#ec4899" />
+              </linearGradient>
+              <linearGradient id="lapGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#6366f1" />
+              </linearGradient>
+            </defs>
+
+            <!-- Outer Track (60-second primary sweep) -->
+            <circle class="dial-track" cx="140" cy="140" r="122" />
+            <!-- Inner Track (Current Lap 60-second sweep) -->
+            <circle class="dial-subtrack" cx="140" cy="140" r="108" />
+
+            <!-- Progress Rings -->
+            <circle id="mainRing" class="dial-progress" cx="140" cy="140" r="122" stroke="url(#dialGradient)" />
+            <circle id="lapRing" class="dial-subprogress" cx="140" cy="140" r="108" stroke="url(#lapGradient)" />
+          </svg>
+
+          <div class="dial-readout">
+            <span id="lapBadgeNumber" class="lap-pill">LAP 01</span>
+            <div class="main-time-row" aria-live="off">
+              <span id="mainTimeMain" class="time-main">00:00</span><span id="mainTimeMs" class="time-ms">.000</span>
+            </div>
+            <div class="sub-time-row">
+              <span class="sub-label">Current Split</span>
+              <span id="currentSplitTime" class="sub-time">00:00.000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Controls: Start / Pause / Resume / Lap / Reset -->
+        <div class="controls-row">
+          <button id="startPauseBtn" type="button" class="ctrl-btn btn-start">
+            <svg id="playSvg" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" /></svg>
+            <svg id="pauseSvg" class="hidden" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+            <span id="startPauseLabel">Start</span>
+          </button>
+
+          <button id="lapBtn" type="button" class="ctrl-btn btn-lap" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+              <line x1="4" y1="22" x2="4" y2="15" />
+            </svg>
+            <span>Lap</span>
+          </button>
+
+          <button id="resetBtn" type="button" class="ctrl-btn btn-reset" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <!-- Keyboard Shortcuts Footer -->
+        <div class="shortcuts-bar" aria-label="Keyboard Shortcuts">
+          <span><kbd>Space</kbd> Start / Pause / Resume</span>
+          <span><kbd>L</kbd> Lap Split</span>
+          <span><kbd>R</kbd> Reset</span>
+          <span><kbd>M</kbd> Mute Audio</span>
+        </div>
+      </section>
+
+      <!-- Right Column: Telemetry Analytics & Lap Split History -->
+      <section class="laps-panel glass-card" aria-label="Lap History and Analytics">
+        <div class="panel-top-bar">
+          <div>
+            <h1 class="panel-title">Lap Telemetry &amp; Splits</h1>
+            <p id="lapSubtitle" class="panel-subtitle">Record laps to analyze split consistency</p>
+          </div>
+          <div class="export-actions">
+            <button id="copyLapsBtn" type="button" class="btn-utility" disabled>Copy</button>
+            <button id="exportCsvBtn" type="button" class="btn-utility" disabled>Export CSV</button>
+          </div>
+        </div>
+
+        <!-- 4 Analytics KPI Cards -->
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">Total Laps</span>
+            <span id="statTotalLaps" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Fastest Lap</span>
+            <span id="statFastestLap" class="stat-value stat-best">--:--.---</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Slowest Lap</span>
+            <span id="statSlowestLap" class="stat-value stat-worst">--:--.---</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Average Split</span>
+            <span id="statAverageLap" class="stat-value">--:--.---</span>
+          </div>
+        </div>
+
+        <!-- Lap History Table -->
+        <div class="lap-table-container">
+          <div class="lap-table-head">
+            <span>Lap</span>
+            <span>Split Time</span>
+            <span>Delta vs Avg</span>
+            <span class="text-right">Total Elapsed</span>
+          </div>
+
+          <div id="lapListBody" class="lap-table-body">
+            <div class="empty-laps">
+              <div class="empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2" /><path d="M10 2h4" />
+                </svg>
+              </div>
+              <p class="empty-title">No Lap Splits Recorded</p>
+              <p class="empty-desc">Start the stopwatch and press <strong>Lap</strong> (or hit <kbd>L</kbd>) to log millisecond splits.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="studio-footer">
+      <span>Chronos Chronograph Studio · Ignite Club Week 9 Project 2</span>
+      <span>High-Resolution <code>performance.now()</code> Timing Engine</span>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
